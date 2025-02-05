@@ -22,11 +22,12 @@ def extract_news_ids(text_set):
 
 
 if __name__ == "__main__":
-    api_key = os.getenv("DEEPSEEK_API_KEY")
+    api_key = os.getenv("DEEPSEEK_API_KEY_2")
     base_url = os.getenv("DEEPSEEK_BASE_URL")
     base_path = Path("/home/aayush/rsys_data")
     save_dir = base_path / "rsys_2025"
     feather_path = save_dir / "interactions.feather"
+    results_file = "slate_recommendation_200.csv"
     df = pd.read_feather(feather_path)
 
     client = OpenAI(api_key=api_key, base_url=base_url)
@@ -45,8 +46,8 @@ if __name__ == "__main__":
             "abstract_entities",
         ],
     )
-    candidate_items = 50
-    num_of_users = 1200
+    candidate_items = 200
+    num_of_users = 19
 
     # Sample 2000 unique user IDs
     random_users = random.sample(df["userId"].unique().tolist(), num_of_users)
@@ -112,7 +113,7 @@ if __name__ == "__main__":
             f"User ID: {user_id}\n"
             f"Click History:\n{formatted_click_history}\n\n"
             f"Candidate items:\n{formatted_impressions}\n\n"
-            f"Recommend the best 10 news items for this user from the set of candidate items with the Itemids from the impressions."
+            f"You are a Slate generator and so recommend the best 10 news items for this user from the set of candidate items with the Itemids from the impressions."
         )
 
         # Generate recommended slate from OpenAI
@@ -139,20 +140,23 @@ if __name__ == "__main__":
         )
 
         # Append to results list
-        results.append(
-            {
-                "userId": user_id,
-                "recommended_slate": list(recommended_slate_set),
-                "presented_slate": list(actual_presented_slate),
-                "number_of_matches": num_matches,
-                "precision": round(precision, 4),
-                "recall": round(recall, 4),
-                "openai_response": openai_response,
-            }
+        results = {
+            "userId": user_id,
+            "recommended_slate": list(recommended_slate_set),
+            "presented_slate": list(actual_presented_slate),
+            "number_of_matches": num_matches,
+            "precision": round(precision, 4),
+            "recall": round(recall, 4),
+            "openai_response": openai_response,
+        }
+
+        result_df = pd.DataFrame([results])
+        result_df.to_csv(
+            results_file, mode="a", header=not os.path.exists(results_file), index=False
         )
 
-    results_df = pd.DataFrame(results)
+    # results_df = pd.DataFrame(results)
 
-    print(results_df.head())
+    # print(results_df.head())
 
-    results_df.to_csv("slate_recommendation.csv", index=False)
+    # results_df.to_csv("slate_recommendation_50.csv", index=False)
