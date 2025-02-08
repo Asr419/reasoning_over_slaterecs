@@ -52,18 +52,14 @@ if __name__ == "__main__":
     # Sample 2000 unique user IDs
     random_users = random.sample(df["userId"].unique().tolist(), num_of_users)
 
-    # Create an empty list to store results
     results = []
 
-    # Process each user
     for user_id in tqdm(random_users):
-        # Extract user's row
+
         user_row = df[df["userId"] == user_id].iloc[0]
 
-        # Extract actual presented slate
         actual_presented_slate = set(user_row["presented_slate"])
 
-        # Extract impressions (removing "-0" or "-1" suffixes)
         user_impressions = [
             imp.split("-")[0] for imp in user_row["impressions"].split()
         ]
@@ -72,27 +68,21 @@ if __name__ == "__main__":
         all_news_items = set(news["itemId"]) - set(user_impressions)  # Avoid duplicates
         additional_news = random.sample(
             list(all_news_items), max(0, candidate_items - len(user_impressions))
-        )  # Fill up to 50
-
-        # Final expanded impressions
+        )
         final_impressions = list(set(user_impressions) | set(additional_news))
 
-        # Extract titles for impressions
         impression_titles = {
             row["itemId"]: row["title"]
             for _, row in news[news["itemId"].isin(final_impressions)].iterrows()
         }
 
-        # Extract click history (removing "-0"/"-1")
         click_history_items = user_row["click_history"]
 
-        # Extract titles for click history
         click_history_titles = {
             row["itemId"]: row["title"]
             for _, row in news[news["itemId"].isin(click_history_items)].iterrows()
         }
 
-        # Format click history with titles
         formatted_click_history = "\n".join(
             [
                 f"{item}: {click_history_titles.get(item, 'Unknown Title')}"
@@ -100,7 +90,6 @@ if __name__ == "__main__":
             ]
         )
 
-        # Format impressions with titles
         formatted_impressions = "\n".join(
             [
                 f"{item}: {impression_titles.get(item, 'Unknown Title')}"
@@ -108,7 +97,6 @@ if __name__ == "__main__":
             ]
         )
 
-        # Create a formatted prompt
         prompt_content = (
             f"User ID: {user_id}\n"
             f"Click History:\n{formatted_click_history}\n\n"
@@ -124,14 +112,9 @@ if __name__ == "__main__":
         openai_response = response.choices[0].message.content
         # Extract recommended slate from OpenAI response
         recommended_slate_raw = response.choices[0].message.content.split("\n")
-        recommended_slate_set = extract_news_ids(
-            recommended_slate_raw
-        )  # Clean and extract IDs
-
-        # Compute matching articles
+        recommended_slate_set = extract_news_ids(recommended_slate_raw)
         num_matches = len(recommended_slate_set & actual_presented_slate)
 
-        # Compute precision and recall
         precision = (
             num_matches / len(recommended_slate_set) if recommended_slate_set else 0
         )
@@ -139,7 +122,6 @@ if __name__ == "__main__":
             num_matches / len(actual_presented_slate) if actual_presented_slate else 0
         )
 
-        # Append to results list
         results = {
             "userId": user_id,
             "recommended_slate": list(recommended_slate_set),
@@ -154,9 +136,3 @@ if __name__ == "__main__":
         result_df.to_csv(
             results_file, mode="a", header=not os.path.exists(results_file), index=False
         )
-
-    # results_df = pd.DataFrame(results)
-
-    # print(results_df.head())
-
-    # results_df.to_csv("slate_recommendation_50.csv", index=False)
