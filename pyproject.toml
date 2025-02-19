@@ -15,10 +15,10 @@ dependencies = [
     "scipy (>=1.7,<2.0)",
     "scikit-learn (>=1.6.1,<2.0.0)",
     "gensim (==4.3.3)",
-    "torch[cu121] (>=2.2.0,<3.0.0)",
     "transformers (>=4.30.0,<5.0.0)",
     "sentence-transformers (>=3.4.1,<4.0.0)",
     "fasttext (>=0.9.3,<0.10.0)",
+    "torch (>=2.6.0,<3.0.0)",
 ]
 
 
