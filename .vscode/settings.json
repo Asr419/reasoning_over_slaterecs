@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./src/reasoning_over_slaterecs",
+        "./src/reasoning_over_slaterecs"
+    ]
+}
