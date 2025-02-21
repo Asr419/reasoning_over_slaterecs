@@ -7,6 +7,7 @@ import shutil
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
+import pandas as pd
 
 import numpy as np
 import pytorch_lightning as pl
@@ -19,46 +20,61 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import wandb
-from mind_dataset.agent_modeling.dqn_agent import (
+
+from reasoning_over_slaterecs.mind_dataset.agent_modeling.dqn_agent import (
     DQNAgent,
     ReplayMemoryDataset,
     Transition,
 )
-from mind_dataset.agent_modeling.slate_generator import (  # DiverseSlateGenerator,; GreedySlateGenerator,; OptimalSlateGenerator,
+from reasoning_over_slaterecs.mind_dataset.agent_modeling.slate_generator import (  # DiverseSlateGenerator,; GreedySlateGenerator,; OptimalSlateGenerator,
     RandomSlateGenerator,
     TopKSlateGenerator,
     TopKGreedySlateGenerator,
 )
-from mind_dataset.agent_modeling.wp_slate_agent import (
+from reasoning_over_slaterecs.mind_dataset.agent_modeling.wp_slate_agent import (
     WolpertingerActorSlate,
     ActorAgentSlate,
 )
-from mind_dataset.agent_modeling.wp_agent import WolpertingerActor, ActorAgent
+from reasoning_over_slaterecs.mind_dataset.agent_modeling.wp_agent import (
+    WolpertingerActor,
+    ActorAgent,
+)
 
 # from rl_mind_dataset.agent_modeling.wp_agent import WolpertingerActor, ActorAgent
 # from rl_mind_dataset.agent_modeling.wp_slate_agent import (
 #     WolpertingerActorSlate,
 #     ActorAgentSlate,
 # )
-from mind_dataset.document_modelling.data_reader import DatasetReader
-from mind_dataset.simulation_environment.environment import SlateGym
-from mind_dataset.user_modelling.choice_model import (
+from reasoning_over_slaterecs.mind_dataset.document_modelling.data_reader import (
+    DatasetReader,
+)
+from reasoning_over_slaterecs.mind_dataset.simulation_environment.environment import (
+    SlateGym,
+)
+from reasoning_over_slaterecs.mind_dataset.user_modelling.choice_model import (
     CosineSimilarityChoiceModel,
     DotProductChoiceModel,
     NCFChoiceModel,
 )
 
-from mind_dataset.user_modelling.response_model import (
+from reasoning_over_slaterecs.mind_dataset.user_modelling.response_model import (
     CosineResponseModel,
     DotProductResponseModel,
     WeightedDotProductResponseModel,
     WeightedCosineResponseModel,
     WeightedUserNCFResponseModel,
 )
-from mind_dataset.user_modelling.user_state import UserState
-from mind_dataset.user_modelling.ncf import NCF, DataFrameDataset
+from reasoning_over_slaterecs.mind_dataset.user_modelling.user_state import UserState
+from reasoning_over_slaterecs.mind_dataset.user_modelling.ncf import (
+    NCF,
+    DataFrameDataset,
+)
 
-from mind_dataset.utils import save_run, save_run_wa, test_save_run
+from reasoning_over_slaterecs.mind_dataset.utils import (
+    save_run,
+    save_run_wa,
+    test_save_run,
+)
 
 class_name_to_class = {
     "ObservedUserState": UserState,

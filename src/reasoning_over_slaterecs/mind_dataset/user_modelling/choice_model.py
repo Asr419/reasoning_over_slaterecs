@@ -9,7 +9,10 @@ import numpy as np
 import numpy.typing as npt
 import torch
 import torch.nn.functional as F
-from mind_dataset.user_modelling.ncf import NCF, DataFrameDataset
+from reasoning_over_slaterecs.mind_dataset.user_modelling.ncf import (
+    NCF,
+    DataFrameDataset,
+)
 
 
 # maybe the scoring function can be passed as a parameter

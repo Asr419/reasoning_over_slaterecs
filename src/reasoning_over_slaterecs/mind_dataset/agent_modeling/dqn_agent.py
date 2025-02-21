@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, IterableDataset
 
-from rl_mind_dataset.agent_modeling.agent import SlateAgent
+from reasoning_over_slaterecs.mind_dataset.agent_modeling.agent import SlateAgent
 
 
 # defining different kind of named tuples for different agents

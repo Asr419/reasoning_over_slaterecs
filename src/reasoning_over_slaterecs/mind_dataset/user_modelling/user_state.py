@@ -5,7 +5,9 @@ import random
 from typing import Any, Type, TypeVar
 
 
-from mind_dataset.document_modelling.data_reader import DatasetReader
+from reasoning_over_slaterecs.mind_dataset.document_modelling.data_reader import (
+    DatasetReader,
+)
 
 import pandas as pd
 import numpy as np

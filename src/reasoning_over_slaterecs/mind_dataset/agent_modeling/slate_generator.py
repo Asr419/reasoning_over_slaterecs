@@ -6,7 +6,7 @@ from typing import Tuple
 import numpy as np
 import torch
 
-from rl_mind_dataset.agent_modeling.dqn_agent import DQNnet
+from reasoning_over_slaterecs.mind_dataset.agent_modeling.dqn_agent import DQNnet
 
 
 class AbstractSlateGenerator(metaclass=abc.ABCMeta):

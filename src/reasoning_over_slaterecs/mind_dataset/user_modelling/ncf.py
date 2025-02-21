@@ -5,7 +5,9 @@ import random
 from typing import Any, Type, TypeVar
 import wandb
 
-from mind_dataset.document_modelling.data_reader import DatasetReader
+from reasoning_over_slaterecs.mind_dataset.document_modelling.data_reader import (
+    DatasetReader,
+)
 
 import pandas as pd
 import numpy as np
@@ -19,7 +21,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data import Dataset
 
-from mind_dataset.utils import save_run_ncf
+from reasoning_over_slaterecs.mind_dataset.utils import save_run_ncf
 from tqdm import tqdm
 
 DEVICE = "cuda:1"
