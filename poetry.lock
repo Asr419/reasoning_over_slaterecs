@@ -2100,6 +2100,24 @@ files = [
 ]
 
 [[package]]
+name = "rank-bm25"
+version = "0.2.2"
+description = "Various BM25 algorithms for document ranking"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "rank_bm25-0.2.2-py3-none-any.whl", hash = "sha256:7bd4a95571adadfc271746fa146a4bcfd89c0cf731e49c3d1ad863290adbe8ae"},
+    {file = "rank_bm25-0.2.2.tar.gz", hash = "sha256:096ccef76f8188563419aaf384a02f0ea459503fdf77901378d4fd9d87e5e51d"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[package.extras]
+dev = ["pytest"]
+
+[[package]]
 name = "recsys-slates-dataset"
 version = "1.0.3"
 description = "Recommender Systems Dataset from FINN.no containing the presented items and whether and what the user clicked on."
@@ -3108,4 +3126,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "21ee0c08fbff4b179352b12d6209af4066d123d0d421fc2a13ad881136e3388a"
+content-hash = "367adbf79c9c5a62a65d6802f59330a6def423af1eec6e27c193d1f3df99866b"
