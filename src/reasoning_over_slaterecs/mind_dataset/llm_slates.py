@@ -2,6 +2,70 @@ from scripts.simulation_imports import *
 from openai import OpenAI
 import pandas as pd
 import re
+import logging
+from tqdm import tqdm
+
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(exist_ok=True)  # Create the directory if it doesn't exist
+tqdm.pandas()
+
+# Initialize a counter to track the number of rows processed
+row_counter = 0
+
+
+def setup_logger():
+    # Create a log file with a timestamp
+    log_file = (
+        LOG_DIR / f"recommendation_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    )
+
+    # Set up the logger
+    logger = logging.getLogger("recommendation_logger")
+    logger.setLevel(logging.INFO)
+
+    # Create a file handler and set the formatter
+    file_handler = logging.FileHandler(log_file)
+    formatter = logging.Formatter("%(asctime)s - %(message)s")
+    file_handler.setFormatter(formatter)
+
+    # Add the handler to the logger
+    logger.addHandler(file_handler)
+
+    return logger
+
+
+def log_recommendation(
+    logger,
+    user_index,
+    initial_user_state,
+    slate_titles,
+    response_text,
+    reason,
+):
+    # Log the user index and initial state
+    logger.info(f"User Index: {user_index}")
+    logger.info(f"Initial User State: {initial_user_state}")
+
+    # Log the candidate items
+    # logger.info("Candidate Items:")
+    # for item_id, title in candidate_titles:
+    #     logger.info(f"  {item_id}: {title}")
+
+    # Log the slate items
+    logger.info("Given Slate Items:")
+    for item_id, title in slate_titles:
+        logger.info(f"  {item_id}: {title}")
+
+    # Log the LLM's response (including reasoning and recommended slate)
+    logger.info("LLM Response:")
+    logger.info(response_text)
+
+    # Log the reasoning behind the recommendation
+    logger.info("Reason-R1:")
+    logger.info(reason)
+
+    # Add a separator for readability
+    logger.info("-" * 50)
 
 
 def get_slate_docs_feature(slate_indices, candidate_docs):
@@ -38,7 +102,11 @@ def parse_recommended_slate(response_text):
 
 
 # Function to process a single row and get the recommended slate
-def process_row(row):
+def process_row(row, logger, client):
+    global row_counter
+
+    user_index = row.name  # Assuming the row index is the user index
+
     # Get the user history for the current row's initial_user_state
     user_state_tuple = tuple(row["initial_user_state"])
     user_history = user_history_dict.get(user_state_tuple, [])
@@ -62,15 +130,54 @@ def process_row(row):
 
     What changes will you make to this slate? If you think any item needs to be changed, consider selecting it from the candidate docs. Take this decision in such a way that the user's click probability from the slate is maximized. The user is only allowed to pick one item.
 
-    Please provide the recommended slate as a numbered list of items.
+    Please provide the recommended slate as a numbered list of 10 items. Please keep it short and concise.
     """
 
     # Get the recommended slate from the LLM
     messages = [{"role": "user", "content": prompt}]
     response = client.chat.completions.create(
-        model="deepseek/deepseek-r1:free", messages=messages
+        model="deepseek/deepseek-r1:free", messages=messages, temperature=0.0
     )
     response_text = response.choices[0].message.content
+    reason = None
+    # Log the recommendation content and reasoning
+
+    # log_recommendation(
+    #     logger,
+    #     user_index,
+    #     user_state_tuple,
+    #     slate_titles,
+    #     response_text,
+    #     reason,
+    # )
+
+    # Increment the row counter
+    row_counter += 1
+
+    # If 50 rows have been processed, close the current log file and create a new one
+    if (row_counter - 1) % 50 == 0:
+        reason = response.choices[0].message.reasoning
+        log_recommendation(
+            logger,
+            user_index,
+            user_state_tuple,
+            slate_titles,
+            response_text,
+            reason,
+        )
+        for handler in logger.handlers:
+            handler.close()
+        logger.handlers.clear()
+        logger = setup_logger()
+    else:
+        log_recommendation(
+            logger,
+            user_index,
+            user_state_tuple,
+            slate_titles,
+            response_text,
+            reason,
+        )
 
     # Parse the response into a list of items
     recommended_slate = parse_recommended_slate(response_text)
@@ -92,6 +199,7 @@ if __name__ == "__main__":
         axis=1,
     )
     USER_SEED = 11
+    logger = setup_logger()
 
     DATA_PATH = Path.home() / Path(os.environ.get("DATA_PATH"))
     dataset_interaction_path = DATA_PATH / Path("MINDlarge_train/test_50.feather")
@@ -166,7 +274,9 @@ if __name__ == "__main__":
     base_url = os.getenv("DEEPSEEK_BASE_URL")
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    df["llm_slate"] = df.apply(process_row, axis=1)
+    df["llm_slate"] = df.progress_apply(
+        process_row, axis=1, logger=logger, client=client
+    )
 
     # Step 1: Group category_data by observed_state and collect all click values in a list
     state_to_clicks = defaultdict(list)
@@ -218,9 +328,10 @@ if __name__ == "__main__":
 
     # Step 3: Calculate the overall average of the group means
     overall_mean = grouped_means["group_mean_hit"].mean()
+    df.to_feather(gen_slates_dir / "wp_llm_slates.feather")
 
-    # Display the results
-    print("Group-level averages:")
-    print(grouped_means)
-    print("\nOverall average:")
-    print(overall_mean)
+    # # Display the results
+    # print("Group-level averages:")
+    # print(grouped_means)
+    # print("\nOverall average:")
+    # print(overall_mean)

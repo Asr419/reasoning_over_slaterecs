@@ -4,3 +4,4 @@ finn_data
 *.csv
 *.bin
 *.bin.gz
+logs
