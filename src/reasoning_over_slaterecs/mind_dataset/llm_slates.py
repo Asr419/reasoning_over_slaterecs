@@ -88,17 +88,20 @@ def get_item_ids_and_titles(item_ids, news_df):
 def parse_recommended_slate(response_text):
     # Regex pattern to match item IDs (e.g., N82348, N18469)
     # Assumes item IDs start with "N" followed by digits
-    item_id_pattern = r"N\d+"
+    if response_text is None:
+        return []
+    else:
+        item_id_pattern = r"N\d+"
 
-    # Find all matches of the pattern in the response text
-    item_ids = re.findall(item_id_pattern, response_text)
-    # Remove single quotes from item IDs (if any)
-    item_ids = [item_id.replace("'", "") for item_id in item_ids]
+        # Find all matches of the pattern in the response text
+        item_ids = re.findall(item_id_pattern, response_text)
+        # Remove single quotes from item IDs (if any)
+        item_ids = [item_id.replace("'", "") for item_id in item_ids]
 
-    # Remove duplicates while preserving order
-    item_ids = list(dict.fromkeys(item_ids))
+        # Remove duplicates while preserving order
+        item_ids = list(dict.fromkeys(item_ids))
 
-    return item_ids
+        return item_ids
 
 
 # Function to process a single row and get the recommended slate
@@ -138,8 +141,13 @@ def process_row(row, logger, client):
     response = client.chat.completions.create(
         model="deepseek/deepseek-r1:free", messages=messages, temperature=0.0
     )
-    response_text = response.choices[0].message.content
-    reason = None
+
+    if response.choices[0].message.content is None:
+        response_text = response.choices[0].message.content
+        reason = None
+    else:
+        response_text = None
+        reason = None
     # Log the recommendation content and reasoning
 
     # log_recommendation(
@@ -156,7 +164,10 @@ def process_row(row, logger, client):
 
     # If 50 rows have been processed, close the current log file and create a new one
     if (row_counter - 1) % 50 == 0:
-        reason = response.choices[0].message.reasoning
+        if response.choices[0].message.content is None:
+            reason = response.choices[0].message.reasoning
+        else:
+            reason = None
         log_recommendation(
             logger,
             user_index,
@@ -270,7 +281,7 @@ if __name__ == "__main__":
     item_impressions = get_item_ids_and_titles(slate_item_ids[0], news_df)
 
     # Initialize the OpenAI client
-    api_key = os.getenv("DEEPSEEK_API_KEY_2")
+    api_key = os.getenv("DEEPSEEK_API_KEY_3")
     base_url = os.getenv("DEEPSEEK_BASE_URL")
     client = OpenAI(api_key=api_key, base_url=base_url)
 
