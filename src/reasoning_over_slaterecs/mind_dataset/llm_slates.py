@@ -142,7 +142,7 @@ def process_row(row, logger, client):
         model="deepseek/deepseek-r1:free", messages=messages, temperature=0.0
     )
 
-    if response.choices[0].message.content is None:
+    if response.choices is not None and len(response.choices) > 0:
         response_text = response.choices[0].message.content
         reason = None
     else:
@@ -164,7 +164,7 @@ def process_row(row, logger, client):
 
     # If 50 rows have been processed, close the current log file and create a new one
     if (row_counter - 1) % 50 == 0:
-        if response.choices[0].message.content is None:
+        if response.choices is not None and len(response.choices) > 0:
             reason = response.choices[0].message.reasoning
         else:
             reason = None
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     item_impressions = get_item_ids_and_titles(slate_item_ids[0], news_df)
 
     # Initialize the OpenAI client
-    api_key = os.getenv("DEEPSEEK_API_KEY_2")
+    api_key = os.getenv("DEEPSEEK_API_KEY_3")
     base_url = os.getenv("DEEPSEEK_BASE_URL")
     client = OpenAI(api_key=api_key, base_url=base_url)
 
