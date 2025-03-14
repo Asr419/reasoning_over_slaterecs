@@ -281,7 +281,7 @@ if __name__ == "__main__":
     item_impressions = get_item_ids_and_titles(slate_item_ids[0], news_df)
 
     # Initialize the OpenAI client
-    api_key = os.getenv("DEEPSEEK_API_KEY_3")
+    api_key = os.getenv("DEEPSEEK_API_KEY_2")
     base_url = os.getenv("DEEPSEEK_BASE_URL")
     client = OpenAI(api_key=api_key, base_url=base_url)
 
