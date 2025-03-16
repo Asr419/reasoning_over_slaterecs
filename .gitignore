@@ -5,3 +5,6 @@ finn_data
 *.bin
 *.bin.gz
 logs
+logs_reasoner
+logs_reasoner_1
+logs_llm

@@ -5,7 +5,7 @@ import re
 import logging
 from tqdm import tqdm
 
-LOG_DIR = Path("logs_reasoner_1")
+LOG_DIR = Path("logs_llm")
 LOG_DIR.mkdir(exist_ok=True)  # Create the directory if it doesn't exist
 tqdm.pandas()
 
@@ -56,9 +56,9 @@ def log_recommendation(
     #     logger.info(f"  {item_id}: {title}")
 
     # Log the slate items
-    logger.info("Given Slate Items:")
-    for item_id, title in slate_titles:
-        logger.info(f"  {item_id}: {title}")
+    # logger.info("Given Slate Items:")
+    # for item_id, title in slate_titles:
+    #     logger.info(f"  {item_id}: {title}")
 
     # Log the LLM's response (including reasoning and recommended slate)
     logger.info("LLM Response:")
@@ -124,7 +124,7 @@ def process_row(row, logger, client):
 
     # Construct the prompt
     prompt = f"""
-    You are a slate generator. Given a user's interaction history, select the best 10 items to recommend.
+    You are a slate generator. Given a user's interaction history, select the best 10 items to recommend to form a slate of 10 items.
 
     User History:
     {', '.join([f"{item} ({title})" for item, title in user_history])}
@@ -132,10 +132,7 @@ def process_row(row, logger, client):
     Candidate Docs:
     {', '.join([f"{item} ({title})" for item, title in candidate_titles])}
 
-    Given Slate:
-    {', '.join([f"{item} ({title})" for item, title in slate_titles])}
-
-    What changes will you make to this slate? If you think any item needs to be changed, consider selecting it from the candidate docs. Take this decision in such a way that the user's click probability from the slate is maximized. The user is only allowed to pick one item.
+    Take this decision in such a way that the user's click probability from the slate is maximized. The user is only allowed to pick one item.
 
     Please provide the recommended slate as a numbered list of 10 items. Please keep it short and concise.
     """
@@ -307,7 +304,7 @@ if __name__ == "__main__":
     print(api_key, base_url)
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    df["llm_slate"] = df.progress_apply(
+    df["llm_gen_slate"] = df.progress_apply(
         process_row, axis=1, logger=logger, client=client
     )
 
@@ -349,19 +346,21 @@ if __name__ == "__main__":
         inplace=True,
     )
 
-    df["hit"] = df.apply(
-        lambda row: 1 if row["original_click"] in row["llm_slate"] else 0, axis=1
+    df["llm_hit"] = df.apply(
+        lambda row: 1 if row["original_click"] in row["llm_gen_slate"] else 0, axis=1
     )
 
     df["initial_user_state_tuple"] = df["initial_user_state"].apply(tuple)
 
     # Step 2: Group by initial_user_state and calculate the mean of 'hit' for each group
-    grouped_means = df.groupby("initial_user_state_tuple")["hit"].mean().reset_index()
-    grouped_means.rename(columns={"hit": "group_mean_hit"}, inplace=True)
+    grouped_means = (
+        df.groupby("initial_user_state_tuple")["llm_hit"].mean().reset_index()
+    )
+    grouped_means.rename(columns={"llm_hit": "group_mean_hit"}, inplace=True)
 
     # Step 3: Calculate the overall average of the group means
     overall_mean = grouped_means["group_mean_hit"].mean()
-    df.to_feather(gen_slates_dir / "wp_llm_slates.feather")
+    df.to_feather(gen_slates_dir / "llm_slates.feather")
 
     # # Display the results
     # print("Group-level averages:")
