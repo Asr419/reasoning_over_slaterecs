@@ -5,7 +5,7 @@ import re
 import logging
 from tqdm import tqdm
 
-LOG_DIR = Path("logs_reasoner_1")
+LOG_DIR = Path("logs_reasoner_slateq")
 LOG_DIR.mkdir(exist_ok=True)  # Create the directory if it doesn't exist
 tqdm.pandas()
 
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     gen_slates_dir = DATA_PATH / "gen_slates"
 
     # Define file path
-    feather_file_path = gen_slates_dir / "wp_user_slates.feather"
+    feather_file_path = gen_slates_dir / "slateq_user_slates.feather"
     df = pd.read_feather(feather_file_path)
 
     # Create the new column 'slate_docs_feature'
@@ -307,7 +307,7 @@ if __name__ == "__main__":
     print(api_key, base_url)
     client = OpenAI(api_key=api_key, base_url=base_url)
 
-    df["llm_slate"] = df.progress_apply(
+    df["llm_slateq_slate"] = df.progress_apply(
         process_row, axis=1, logger=logger, client=client
     )
 
@@ -349,19 +349,21 @@ if __name__ == "__main__":
         inplace=True,
     )
 
-    df["hit"] = df.apply(
-        lambda row: 1 if row["original_click"] in row["llm_slate"] else 0, axis=1
+    df["slateq_hit"] = df.apply(
+        lambda row: 1 if row["original_click"] in row["llm_slateq_slate"] else 0, axis=1
     )
 
     df["initial_user_state_tuple"] = df["initial_user_state"].apply(tuple)
 
     # Step 2: Group by initial_user_state and calculate the mean of 'hit' for each group
-    grouped_means = df.groupby("initial_user_state_tuple")["hit"].mean().reset_index()
-    grouped_means.rename(columns={"hit": "group_mean_hit"}, inplace=True)
+    grouped_means = (
+        df.groupby("initial_user_state_tuple")["slateq_hit"].mean().reset_index()
+    )
+    grouped_means.rename(columns={"slateq_hit": "group_mean_hit"}, inplace=True)
 
     # Step 3: Calculate the overall average of the group means
     overall_mean = grouped_means["group_mean_hit"].mean()
-    df.to_feather(gen_slates_dir / "wp_llm_slates.feather")
+    df.to_feather(gen_slates_dir / "slateq_llm_slates.feather")
 
     # # Display the results
     # print("Group-level averages:")
